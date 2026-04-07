@@ -1,0 +1,91 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --azul: #1B3A6B;
+  --azul-claro: #2952A3;
+  --azul-oscuro: #0f2244;
+  --blanco: #ffffff;
+  --gris-claro: #f8f9fb;
+  --gris: #e8ecf0;
+  --gris-texto: #6b7280;
+  --negro: #111827;
+  --sombra: 0 4px 24px rgba(27,58,107,0.10);
+  --sombra-hover: 0 8px 40px rgba(27,58,107,0.18);
+  --radio: 12px;
+  --transicion: all 0.25s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--blanco);
+  color: var(--negro);
+  line-height: 1.6;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--gris-claro); }
+::-webkit-scrollbar-thumb { background: var(--azul-claro); border-radius: 3px; }
+
+.btn-primary {
+  background: var(--azul);
+  color: white;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transicion);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary:hover { background: var(--azul-claro); transform: translateY(-1px); box-shadow: var(--sombra-hover); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--azul);
+  padding: 11px 28px;
+  border: 2px solid var(--azul);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transicion);
+}
+.btn-outline:hover { background: var(--azul); color: white; }
+
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-disponible { background: #dcfce7; color: #166534; }
+.badge-arrendada { background: #dbeafe; color: #1e40af; }
+.badge-vendida { background: #fce7f3; color: #9d174d; }
+.badge-arriendo { background: #fef3c7; color: #92400e; }
+.badge-venta { background: #e0e7ff; color: #3730a3; }
