@@ -1,37 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
   private readonly logger = new Logger(EmailService.name);
-  private readonly from: string;
   private readonly destino: string;
+  private readonly from = 'Grupo Inmobiliario HMR <onboarding@resend.dev>';
 
   constructor(private config: ConfigService) {
-    const user = this.config.get<string>('EMAIL_USER');
-    const pass = this.config.get<string>('EMAIL_PASS');
-    this.from = `"Grupo Inmobiliario HMR" <${user}>`;
-    this.destino = user!;
-
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user, pass },
-    });
-
-    this.transporter.verify((error) => {
-      if (error) {
-        this.logger.error('Error conectando al email: ' + error.message);
-      } else {
-        this.logger.log('✅ Servidor de email conectado correctamente');
-      }
-    });
+    const apiKey = this.config.get<string>('RESEND_API_KEY');
+    this.resend = new Resend(apiKey);
+    this.destino = this.config.get<string>('EMAIL_USER')!;
+    this.logger.log('✅ Servicio de email Resend inicializado');
   }
 
-  // ─── Notificación a la inmobiliaria — nueva cita/consulta ────────────────
   async enviarNotificacionCita(cita: {
     id: number;
     clienteNombre: string;
@@ -68,11 +52,10 @@ export class EmailService {
         </div>
       </div>`;
 
-    await this.transporter.sendMail({ from: this.from, to: this.destino, subject: asunto, html });
-    this.logger.log(`✅ Email cita #${cita.id} enviado a inmobiliaria`);
+    await this.resend.emails.send({ from: this.from, to: this.destino, subject: asunto, html });
+    this.logger.log(`✅ Email cita #${cita.id} enviado`);
   }
 
-  // ─── Email al CLIENTE cuando confirman o cancelan su cita ────────────────
   async enviarConfirmacionCliente(cita: {
     clienteNombre: string;
     clienteEmail: string;
@@ -98,26 +81,20 @@ export class EmailService {
         </div>
         <div style="background:white;padding:32px;border-radius:0 0 8px 8px;border:1px solid #e8ecf0;">
           <p style="color:#374151;font-size:15px;margin-top:0;">Hola <strong>${cita.clienteNombre}</strong>,</p>
-
           ${confirmada ? `
-          <p style="color:#374151;font-size:15px;line-height:1.7;">¡Buenas noticias! Tu solicitud de visita ha sido <strong style="color:#059669;">confirmada</strong>. Te esperamos con gusto.</p>
+          <p style="color:#374151;font-size:15px;line-height:1.7;">¡Buenas noticias! Tu solicitud ha sido <strong style="color:#059669;">confirmada</strong>. Te esperamos con gusto.</p>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin:20px 0;">
             <h3 style="margin:0 0 12px;color:#166534;font-size:15px;">📋 Detalles de tu visita</h3>
             ${cita.propiedadTitulo ? `<p style="margin:0 0 6px;font-size:14px;color:#374151;">🏠 <strong>${cita.propiedadTitulo}</strong></p>` : ''}
             ${fechaFormateada ? `<p style="margin:0 0 6px;font-size:14px;color:#374151;text-transform:capitalize;">📅 ${fechaFormateada}</p>` : ''}
             ${cita.hora ? `<p style="margin:0;font-size:14px;color:#374151;">🕐 ${cita.hora}</p>` : ''}
-          </div>
-          <p style="color:#374151;font-size:14px;">Si necesitas cambiar la fecha o tienes preguntas, contáctanos:</p>
-          ` : `
-          <p style="color:#374151;font-size:15px;line-height:1.7;">Lamentamos informarte que tu solicitud de visita ${cita.propiedadTitulo ? `para <strong>${cita.propiedadTitulo}</strong>` : ''} ha sido <strong style="color:#dc2626;">cancelada</strong>.</p>
-          <p style="color:#374151;font-size:15px;line-height:1.7;">Esto puede deberse a disponibilidad del inmueble u otras razones. Te invitamos a contactarnos para reagendar o explorar otras opciones.</p>
-          `}
-
+          </div>` : `
+          <p style="color:#374151;font-size:15px;line-height:1.7;">Lamentamos informarte que tu solicitud ${cita.propiedadTitulo ? `para <strong>${cita.propiedadTitulo}</strong>` : ''} ha sido <strong style="color:#dc2626;">cancelada</strong>.</p>
+          <p style="color:#374151;font-size:15px;line-height:1.7;">Te invitamos a contactarnos para reagendar o explorar otras opciones.</p>`}
           <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
-            <a href="https://wa.me/573202797261" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">💬 WhatsApp</a>
+            <a href="https://wa.me/573202797261" style="display:inline-block;background:#25D366;color:white;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">💬 WhatsApp</a>
             <a href="tel:+573202797261" style="display:inline-block;background:#1B3A6B;color:white;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">📞 Llamar</a>
           </div>
-
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e8ecf0;font-size:13px;color:#6b7280;">
             <p style="margin:0 0 4px;"><strong style="color:#374151;">Grupo Inmobiliario HMR S.A.S.</strong></p>
             <p style="margin:0 0 4px;">📍 Cra 16 #53-38, Galerías, Bogotá</p>
@@ -127,11 +104,10 @@ export class EmailService {
         </div>
       </div>`;
 
-    await this.transporter.sendMail({ from: this.from, to: cita.clienteEmail, subject: asunto, html });
+    await this.resend.emails.send({ from: this.from, to: cita.clienteEmail, subject: asunto, html });
     this.logger.log(`✅ Email ${cita.estado} enviado al cliente ${cita.clienteEmail}`);
   }
 
-  // ─── Alerta vencimiento de contrato ──────────────────────────────────────
   async enviarAlertaVencimiento(contrato: {
     id: number;
     arrendatarioNombre: string;
@@ -163,7 +139,7 @@ export class EmailService {
         </div>
       </div>`;
 
-    await this.transporter.sendMail({
+    await this.resend.emails.send({
       from: this.from, to: this.destino,
       subject: `⚠️ Contrato #${contrato.id} vence en 3 meses — ${contrato.arrendatarioNombre}`,
       html,
