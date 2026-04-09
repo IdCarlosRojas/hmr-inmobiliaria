@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUsuarios, crearUsuario, eliminarUsuario } from '../../services/api';
-import { Plus, Trash2, X, Check, Shield, User } from 'lucide-react';
+import { Plus, Trash2, X, Check, AlertCircle } from 'lucide-react';
 
 const FORM_INICIAL = { nombre: '', email: '', password: '', rol: 'admin_inmuebles', telefono: '' };
 
@@ -13,6 +13,7 @@ const ROL_INFO: Record<string, { label: string; color: string; bg: string }> = {
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [form, setForm] = useState(FORM_INICIAL);
   const [guardando, setGuardando] = useState(false);
@@ -21,8 +22,17 @@ const UsuariosPage = () => {
 
   const cargar = async () => {
     setCargando(true);
-    try { const res = await getUsuarios(); setUsuarios(res.data); }
-    catch { } finally { setCargando(false); }
+    setError('');
+    try {
+      const res = await getUsuarios();
+      setUsuarios(res.data);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Error desconocido';
+      setError(`No se pudieron cargar los usuarios: ${msg}`);
+      setUsuarios([]);
+    } finally {
+      setCargando(false);
+    }
   };
 
   const handleGuardar = async () => {
@@ -37,12 +47,19 @@ const UsuariosPage = () => {
       setForm(FORM_INICIAL);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Error al crear usuario');
-    } finally { setGuardando(false); }
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const handleEliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar este usuario?')) return;
-    try { await eliminarUsuario(id); cargar(); } catch { alert('Error al eliminar'); }
+    try {
+      await eliminarUsuario(id);
+      cargar();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al eliminar');
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -68,9 +85,22 @@ const UsuariosPage = () => {
         </button>
       </div>
 
+      {/* Banner de error visible */}
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: 10, marginBottom: 20, fontSize: 14 }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+          <button onClick={cargar} style={{ marginLeft: 'auto', background: '#dc2626', color: 'white', border: 'none', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
         {cargando ? (
           <p style={{ color: '#6b7280' }}>Cargando...</p>
+        ) : usuarios.length === 0 && !error ? (
+          <p style={{ color: '#6b7280', gridColumn: '1/-1', textAlign: 'center', padding: 40 }}>No hay usuarios registrados</p>
         ) : usuarios.map(u => {
           const rolInfo = ROL_INFO[u.rol] || ROL_INFO.admin_inmuebles;
           return (
@@ -113,7 +143,7 @@ const UsuariosPage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
                 { key: 'nombre', label: 'Nombre completo *', placeholder: 'Juan Pérez' },
-                { key: 'email', label: 'Correo Gmail *', placeholder: 'correo@gmail.com', type: 'email' },
+                { key: 'email', label: 'Correo electrónico *', placeholder: 'correo@gmail.com', type: 'email' },
                 { key: 'password', label: 'Contraseña *', placeholder: 'Mínimo 6 caracteres', type: 'password' },
                 { key: 'telefono', label: 'Teléfono', placeholder: '300 000 0000' },
               ].map(({ key, label, placeholder, type = 'text' }) => (

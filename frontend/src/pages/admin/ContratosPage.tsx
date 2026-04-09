@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getContratos, crearContrato, actualizarContrato, eliminarContrato } from '../../services/api';
 import { Contrato } from '../../types';
-import { Plus, Edit, Trash2, X, Check, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Check, FileText, AlertCircle } from 'lucide-react';
 
 const FORM_INICIAL = {
   propiedadId: '', propiedadTitulo: '', arrendatarioNombre: '',
@@ -22,6 +22,7 @@ const ESTADO_COLORES: Record<string, { bg: string; color: string }> = {
 const ContratosPage = () => {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Contrato | null>(null);
   const [form, setForm] = useState(FORM_INICIAL);
@@ -32,8 +33,17 @@ const ContratosPage = () => {
 
   const cargar = async () => {
     setCargando(true);
-    try { const res = await getContratos(); setContratos(res.data); }
-    catch { } finally { setCargando(false); }
+    setError('');
+    try {
+      const res = await getContratos();
+      setContratos(res.data);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Error desconocido';
+      setError(`No se pudieron cargar los contratos: ${msg}`);
+      setContratos([]);
+    } finally {
+      setCargando(false);
+    }
   };
 
   const abrirModal = (contrato?: Contrato) => {
@@ -70,13 +80,23 @@ const ContratosPage = () => {
       const datos = { ...form, propiedadId: parseInt(form.propiedadId) || 0, valorMensual: parseInt(form.valorMensual) };
       if (editando) { await actualizarContrato(editando.id, datos); }
       else { await crearContrato(datos); }
-      await cargar(); cerrarModal();
-    } catch { alert('Error al guardar'); } finally { setGuardando(false); }
+      await cargar();
+      cerrarModal();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al guardar contrato');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const handleEliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar este contrato?')) return;
-    try { await eliminarContrato(id); cargar(); } catch { alert('Error al eliminar'); }
+    try {
+      await eliminarContrato(id);
+      cargar();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al eliminar');
+    }
   };
 
   const filtrados = contratos.filter(c =>
@@ -105,6 +125,17 @@ const ContratosPage = () => {
           <Plus size={16} /> Nuevo contrato
         </button>
       </div>
+
+      {/* Banner de error visible */}
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: 10, marginBottom: 20, fontSize: 14 }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+          <button onClick={cargar} style={{ marginLeft: 'auto', background: '#dc2626', color: 'white', border: 'none', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+            Reintentar
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
         {[
@@ -135,7 +166,7 @@ const ContratosPage = () => {
             ) : filtrados.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
                 <FileText size={32} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.3 }} />
-                No hay contratos registrados
+                {error ? 'Error al cargar' : 'No hay contratos registrados'}
               </td></tr>
             ) : filtrados.map((c, i) => {
               const colores = ESTADO_COLORES[c.estado] || ESTADO_COLORES.cancelado;
@@ -187,7 +218,7 @@ const ContratosPage = () => {
                 { key: 'valorMensual', label: 'Valor mensual (COP) *', placeholder: '1500000', type: 'number' },
                 { key: 'fechaInicio', label: 'Fecha inicio *', type: 'date' },
                 { key: 'fechaFin', label: 'Fecha fin *', type: 'date' },
-              ].map(({ key, label, placeholder, type = 'text', full }) => (
+              ].map(({ key, label, placeholder, type = 'text', full }: any) => (
                 <div key={key} style={full ? { gridColumn: '1 / -1' } : {}}>
                   <label style={labelStyle}>{label}</label>
                   <input style={inputStyle} type={type} placeholder={placeholder}

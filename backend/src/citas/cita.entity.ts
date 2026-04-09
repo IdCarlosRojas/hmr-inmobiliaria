@@ -12,10 +12,10 @@ export class Cita {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true })
   propiedadId: number;
 
-  @Column()
+  @Column({ nullable: true })
   propiedadTitulo: string;
 
   @Column()

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCitas, actualizarCita, eliminarCita } from '../../services/api';
 import { Cita } from '../../types';
-import { Trash2, Check, X, Calendar, Clock } from 'lucide-react';
+import { Trash2, Check, X, Calendar, Clock, AlertCircle } from 'lucide-react';
 
 const ESTADO_COLORES: Record<string, { bg: string; color: string }> = {
   pendiente: { bg: '#fef3c7', color: '#92400e' },
@@ -13,6 +13,7 @@ const ESTADO_COLORES: Record<string, { bg: string; color: string }> = {
 const CitasPage = () => {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [busqueda, setBusqueda] = useState('');
 
@@ -20,17 +21,36 @@ const CitasPage = () => {
 
   const cargar = async () => {
     setCargando(true);
-    try { const res = await getCitas(); setCitas(res.data); }
-    catch { } finally { setCargando(false); }
+    setError('');
+    try {
+      const res = await getCitas();
+      setCitas(res.data);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Error desconocido';
+      setError(`No se pudieron cargar las citas: ${msg}`);
+      setCitas([]);
+    } finally {
+      setCargando(false);
+    }
   };
 
   const cambiarEstado = async (id: number, estado: string) => {
-    try { await actualizarCita(id, { estado }); cargar(); } catch { alert('Error'); }
+    try {
+      await actualizarCita(id, { estado });
+      cargar();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al actualizar estado');
+    }
   };
 
   const handleEliminar = async (id: number) => {
     if (!window.confirm('¿Eliminar esta cita?')) return;
-    try { await eliminarCita(id); cargar(); } catch { alert('Error'); }
+    try {
+      await eliminarCita(id);
+      cargar();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al eliminar');
+    }
   };
 
   const filtradas = citas.filter(c => {
@@ -59,6 +79,17 @@ const CitasPage = () => {
         </select>
       </div>
 
+      {/* Banner de error visible */}
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: 10, marginBottom: 20, fontSize: 14 }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+          <button onClick={cargar} style={{ marginLeft: 'auto', background: '#dc2626', color: 'white', border: 'none', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
         {[
           { label: 'Total', valor: citas.length, color: '#1B3A6B' },
@@ -79,7 +110,7 @@ const CitasPage = () => {
         ) : filtradas.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 60, color: '#6b7280' }}>
             <Calendar size={40} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }} />
-            <p>No hay citas {filtroEstado ? `con estado "${filtroEstado}"` : 'registradas'}</p>
+            <p>{error ? 'Error al cargar citas' : `No hay citas ${filtroEstado ? `con estado "${filtroEstado}"` : 'registradas'}`}</p>
           </div>
         ) : filtradas.map(c => {
           const colores = ESTADO_COLORES[c.estado] || ESTADO_COLORES.pendiente;

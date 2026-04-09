@@ -7,8 +7,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class ContratosController {
   constructor(private readonly service: ContratosService) {}
 
-  @Get() findAll() { return this.service.findAll(); }
   @Get('stats') getStats() { return this.service.getStats(); }
+  @Get() findAll() { return this.service.findAll(); }
   @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(+id); }
   @Post() create(@Body() body: any) { return this.service.create(body); }
   @Put(':id') update(@Param('id') id: string, @Body() body: any) { return this.service.update(+id, body); }

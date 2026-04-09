@@ -1,18 +1,21 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PropiedadesModule } from './propiedades/propiedades.module';
 import { ContratosModule } from './contratos/contratos.module';
 import { CitasModule } from './citas/citas.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { EmailModule } from './email/email.module';
 import { UsersService } from './users/users.service';
 import { PropiedadesService } from './propiedades/propiedades.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -33,6 +36,7 @@ import { PropiedadesService } from './propiedades/propiedades.service';
     ContratosModule,
     CitasModule,
     CloudinaryModule,
+    EmailModule,
   ],
 })
 export class AppModule implements OnModuleInit {
