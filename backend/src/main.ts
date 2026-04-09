@@ -5,24 +5,27 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Validación global
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
-    forbidNonWhitelisted: true,
+    forbidNonWhitelisted: false,
     transform: true,
   }));
 
-  // CORS para el frontend
+  // CORS — permite el frontend en producción y local
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://hmr-inmobiliaria-plum.vercel.app',
+      'https://hmr-inmobiliaria-git-main-idcarlosrojas-projects.vercel.app',
+      /\.vercel\.app$/,
+    ],
     credentials: true,
   });
 
-  // Prefijo global de la API
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`✅ HMR Backend corriendo en http://localhost:${port}/api`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`✅ HMR Backend corriendo en puerto ${port}`);
 }
 bootstrap();
