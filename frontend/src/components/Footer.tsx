@@ -44,9 +44,13 @@ const Footer = () => (
             Empresa con experiencia en el sector inmobiliario, comprometida con encontrar el inmueble perfecto para cada cliente.
           </p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <a href="https://www.facebook.com/GrupoInmobiliarioHmr" target="_blank" rel="noreferrer"
+            <a href="https://www.facebook.com/profile.php?id=61576958882068&locale=es_LA" target="_blank" rel="noreferrer"
               style={{ width: 36, height: 36, background: '#1877f2', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
               f
+            </a>
+            <a href="https://www.instagram.com/grupoinmobiliariohmr/" target="_blank" rel="noreferrer"
+              style={{ width: 36, height: 36, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+              IG
             </a>
             <a href="https://wa.me/573202797261" target="_blank" rel="noreferrer"
               style={{ width: 36, height: 36, background: '#25D366', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
